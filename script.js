@@ -178,7 +178,7 @@ function startDualShockFrenzy() {
     }, 1000);
   }
 
-  symbolInfo.forEach((info, index) => {
+  symbolInfo.forEach((info) => {
     const piece = document.createElement("button");
     piece.type = "button";
     piece.className = `frenzy-symbol frenzy-${info.id}`;
@@ -188,7 +188,6 @@ function startDualShockFrenzy() {
     piece.setAttribute("aria-label", `Catch the floating ${info.label}`);
     piece.style.left = `${info.x}vw`;
     piece.style.top = `${info.y}vh`;
-    piece.style.setProperty("--float-delay", `${index * -1.4}s`);
     piece.addEventListener("click", (event) => catchPiece(piece, event.clientX || piece.getBoundingClientRect().left + 20, event.clientY || piece.getBoundingClientRect().top + 20));
     document.body.append(piece);
     pieces.set(info.id, piece);
@@ -218,4 +217,8 @@ function startDualShockFrenzy() {
   }
 }
 
-startDualShockFrenzy();
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", startDualShockFrenzy, { once: true });
+} else {
+  startDualShockFrenzy();
+}
