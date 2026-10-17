@@ -108,8 +108,8 @@ function startDualShockFrenzy() {
   const symbolInfo = [
     { id: "triangle", glyph: "△", label: "triangle", x: 12, y: 42 },
     { id: "circle", glyph: "○", label: "circle", x: 83, y: 36 },
-    { id: "cross", glyph: "×", label: "cross", x: 18, y: 76 },
-    { id: "square", glyph: "□", label: "square", x: 87, y: 73 }
+    { id: "cross", glyph: "×", label: "cross", x: 18, y: 48 },
+    { id: "square", glyph: "□", label: "square", x: 87, y: 48 }
   ];
   const cycle = ["triangle", "circle", "cross", "square"];
   const caught = [];
