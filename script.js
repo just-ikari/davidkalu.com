@@ -105,17 +105,20 @@ if (!prefersReducedMotion && "IntersectionObserver" in window) {
 }
 
 function startDualShockFrenzy() {
-  const symbolInfo = [
-    { id: "triangle", glyph: "△", label: "triangle", x: 12, y: 42 },
-    { id: "circle", glyph: "○", label: "circle", x: 83, y: 36 },
-    { id: "cross", glyph: "×", label: "cross", x: 18, y: 48 },
-    { id: "square", glyph: "□", label: "square", x: 87, y: 48 }
-  ];
   const cycle = ["triangle", "circle", "cross", "square"];
+  const glyphs = { triangle: "△", circle: "○", cross: "×", square: "□" };
+  const names = { triangle: "triangle", circle: "circle", cross: "cross", square: "square" };
+  const combinationResults = {
+    "circle|circle": "cross", "cross|cross": "square", "square|square": "triangle", "triangle|triangle": "circle",
+    "circle|cross": "square", "circle|square": "cross", "circle|triangle": "cross",
+    "cross|square": "triangle", "cross|triangle": "circle", "square|triangle": "circle"
+  };
+  const pieces = [];
   const caught = [];
-  const pieces = new Map();
   let welcomeShown = false;
   let won = false;
+  let audioContext = null;
+  let lastFrame = performance.now();
   const isLaptop = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
   const welcome = document.createElement("aside");
@@ -132,6 +135,41 @@ function startDualShockFrenzy() {
   success.innerHTML = '<form method="dialog"><button class="frenzy-close" aria-label="Close hidden write-up">×</button></form><p class="eyebrow">A NOTE YOU FOUND</p><h2 id="frenzy-secret-title">A resource in motion</h2><p>We talk about being smart as if it were a fixed thing: something a person either has or doesn’t. But ability changes with the room we are in, the tools we can reach, and the time someone gives us to try.</p><p>A book can open a door. A patient teacher can turn a mistake into a method. A chance to practise can make an unfamiliar thing feel possible. The person did not suddenly become worthy of learning; they finally got the conditions to show what they could do.</p><p>Maybe that is why I think of smarts as a resource. Resources grow when they are shared, supported, and put to use.</p><p class="frenzy-signoff">THANKS FOR PLAYING <span aria-hidden="true">✳</span></p>';
   document.body.append(success);
 
+  function unlockSound() {
+    if (audioContext) {
+      if (audioContext.state === "suspended") audioContext.resume().catch(() => {});
+      return;
+    }
+    const AudioEngine = window.AudioContext || window.webkitAudioContext;
+    if (!AudioEngine) return;
+    try {
+      audioContext = new AudioEngine();
+      audioContext.resume().catch(() => {});
+    } catch {
+      audioContext = null;
+    }
+  }
+  document.addEventListener("pointerdown", unlockSound, { once: true });
+  document.addEventListener("keydown", unlockSound, { once: true });
+
+  function playCollisionSound(shape) {
+    if (!audioContext || audioContext.state !== "running") return;
+    const now = audioContext.currentTime;
+    const oscillator = audioContext.createOscillator();
+    const volume = audioContext.createGain();
+    const notes = { triangle: 520, circle: 610, cross: 700, square: 780 };
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(notes[shape] || 600, now);
+    oscillator.frequency.exponentialRampToValueAtTime((notes[shape] || 600) * 1.35, now + 0.12);
+    volume.gain.setValueAtTime(0.001, now);
+    volume.gain.exponentialRampToValueAtTime(0.055, now + 0.018);
+    volume.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+    oscillator.connect(volume);
+    volume.connect(audioContext.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.21);
+  }
+
   function showRipple(x, y) {
     const ripple = document.createElement("span");
     ripple.className = "frenzy-ripple";
@@ -142,12 +180,21 @@ function startDualShockFrenzy() {
     ripple.addEventListener("animationend", () => ripple.remove(), { once: true });
   }
 
+  function updateShape(piece, shape) {
+    piece.shape = shape;
+    piece.el.dataset.shape = shape;
+    piece.el.textContent = glyphs[shape];
+    piece.el.setAttribute("aria-label", `Catch the floating ${names[shape]}`);
+    piece.el.classList.remove("fusion-flash");
+    void piece.el.offsetWidth;
+    piece.el.classList.add("fusion-flash");
+    piece.el.addEventListener("animationend", () => piece.el.classList.remove("fusion-flash"), { once: true });
+  }
+
   function catchPiece(piece, x, y) {
-    if (piece.dataset.caught === "true" || won) return;
-    piece.dataset.caught = "true";
-    const id = piece.dataset.symbol;
-    const info = symbolInfo.find((symbol) => symbol.id === id);
-    piece.classList.add("is-caught");
+    if (!piece.active || won) return;
+    piece.active = false;
+    piece.el.classList.add("is-caught");
     showRipple(x, y);
     if (!welcomeShown) {
       welcomeShown = true;
@@ -156,12 +203,12 @@ function startDualShockFrenzy() {
       requestAnimationFrame(() => welcome.classList.add("is-visible"));
     }
 
-    if (caught.length === 0 || id === cycle[(cycle.indexOf(caught[caught.length - 1]) + 1) % cycle.length]) {
-      caught.push(id);
+    const shape = piece.shape;
+    if (caught.length === 0 || shape === cycle[(cycle.indexOf(caught[caught.length - 1]) + 1) % cycle.length]) {
+      caught.push(shape);
     } else {
-      caught.splice(0, caught.length, id);
+      caught.splice(0, caught.length, shape);
     }
-    piece.setAttribute("aria-label", `${info.label}, caught ${caught.length} of 4 in your current sequence`);
     if (caught.length === 4) {
       won = true;
       window.setTimeout(() => {
@@ -172,49 +219,138 @@ function startDualShockFrenzy() {
     }
     window.setTimeout(() => {
       if (won) return;
-      piece.dataset.caught = "false";
-      piece.classList.remove("is-caught");
-      piece.setAttribute("aria-label", `Catch the floating ${info.label}`);
-    }, 1000);
+      piece.x = Math.max(8, Math.min(window.innerWidth - 54, Math.random() * (window.innerWidth - 70)));
+      piece.y = Math.max(88, Math.min(window.innerHeight - 64, Math.random() * (window.innerHeight - 110)));
+      piece.vx = (Math.random() - 0.5) * 0.7;
+      piece.vy = (Math.random() - 0.5) * 0.55;
+      piece.active = true;
+      piece.cooldownUntil = performance.now() + 700;
+      piece.el.style.left = `${piece.x}px`;
+      piece.el.style.top = `${piece.y}px`;
+      piece.el.classList.remove("is-caught");
+    }, 900);
   }
 
-  symbolInfo.forEach((info) => {
-    const piece = document.createElement("button");
-    piece.type = "button";
-    piece.className = `frenzy-symbol frenzy-${info.id}`;
-    piece.textContent = info.glyph;
-    piece.dataset.symbol = info.id;
-    piece.dataset.caught = "false";
-    piece.setAttribute("aria-label", `Catch the floating ${info.label}`);
-    piece.style.left = `${info.x}vw`;
-    piece.style.top = `${info.y}vh`;
-    piece.addEventListener("click", (event) => catchPiece(piece, event.clientX || piece.getBoundingClientRect().left + 20, event.clientY || piece.getBoundingClientRect().top + 20));
-    document.body.append(piece);
-    pieces.set(info.id, piece);
-  });
+  function fuse(first, second, now, distance, dx, dy) {
+    const pair = [first.shape, second.shape].sort().join("|");
+    const result = combinationResults[pair] || "circle";
+    updateShape(first, result);
+    updateShape(second, result);
+    first.cooldownUntil = second.cooldownUntil = now + 900;
+    const safeDistance = Math.max(distance, 0.01);
+    const nx = dx / safeDistance;
+    const ny = dy / safeDistance;
+    const separation = Math.max(2, (52 - distance) / 2);
+    first.x -= nx * separation;
+    first.y -= ny * separation;
+    second.x += nx * separation;
+    second.y += ny * separation;
+    first.vx = -first.vx;
+    first.vy = -first.vy;
+    second.vx = -second.vx;
+    second.vy = -second.vy;
+    first.el.style.left = `${first.x}px`;
+    first.el.style.top = `${first.y}px`;
+    second.el.style.left = `${second.x}px`;
+    second.el.style.top = `${second.y}px`;
+    playCollisionSound(result);
+    showRipple((first.x + second.x) / 2 + 23, (first.y + second.y) / 2 + 23);
+  }
+
+  function animate(now) {
+    const delta = Math.min(2, (now - lastFrame) / 16.67);
+    lastFrame = now;
+    const edge = 8;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const maxTop = Math.max(88, height - 60);
+    for (const piece of pieces) {
+      if (!piece.active) continue;
+      piece.x += piece.vx * delta;
+      piece.y += piece.vy * delta;
+      if (piece.x < edge || piece.x > width - 54) piece.vx *= -1;
+      if (piece.y < 82 || piece.y > maxTop) piece.vy *= -1;
+      piece.x = Math.max(edge, Math.min(width - 54, piece.x));
+      piece.y = Math.max(82, Math.min(maxTop, piece.y));
+      piece.el.style.left = `${piece.x}px`;
+      piece.el.style.top = `${piece.y}px`;
+    }
+    for (let first = 0; first < pieces.length; first += 1) {
+      const a = pieces[first];
+      if (!a.active || a.cooldownUntil > now) continue;
+      for (let second = first + 1; second < pieces.length; second += 1) {
+        const b = pieces[second];
+        if (!a.active || a.cooldownUntil > now || !b.active || b.cooldownUntil > now) continue;
+        const dx = (b.x + 23) - (a.x + 23);
+        const dy = (b.y + 23) - (a.y + 23);
+        const distance = Math.hypot(dx, dy);
+        if (distance < 48) fuse(a, b, now, distance, dx, dy);
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+  const columns = [0.06, 0.32, 0.62, 0.86];
+  const rows = [0.22, 0.48];
+  for (let index = 0; index < 8; index += 1) {
+    const row = Math.floor(index / columns.length);
+    const column = index % columns.length;
+    const shape = cycle[index % cycle.length];
+    const element = document.createElement("button");
+    element.type = "button";
+    element.className = "frenzy-symbol";
+    element.dataset.shape = shape;
+    element.textContent = glyphs[shape];
+    element.setAttribute("aria-label", `Catch the floating ${names[shape]}`);
+    const x = Math.max(8, Math.min(window.innerWidth - 54, window.innerWidth * columns[column]));
+    const y = Math.max(82, Math.min(window.innerHeight - 60, window.innerHeight * rows[row]));
+    const piece = {
+      el: element,
+      shape,
+      x,
+      y,
+      vx: column % 2 === 0 ? 0.38 : -0.38,
+      vy: row % 2 === 0 ? 0.42 : -0.42,
+      active: true,
+      cooldownUntil: 0
+    };
+    element.style.left = `${x}px`;
+    element.style.top = `${y}px`;
+    element.addEventListener("click", (event) => {
+      const rect = element.getBoundingClientRect();
+      catchPiece(piece, event.clientX || rect.left + rect.width / 2, event.clientY || rect.top + rect.height / 2);
+    });
+    document.body.append(element);
+    pieces.push(piece);
+  }
 
   if (isLaptop) {
     document.addEventListener("pointermove", (event) => {
-      for (const piece of pieces.values()) {
-        if (piece.dataset.caught === "true" || won) continue;
-        const rect = piece.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
+      for (const piece of pieces) {
+        if (!piece.active || won) continue;
+        const centerX = piece.x + 23;
+        const centerY = piece.y + 23;
         const dx = centerX - event.clientX;
         const dy = centerY - event.clientY;
         const distance = Math.hypot(dx, dy);
         if (distance < 19) {
           catchPiece(piece, centerX, centerY);
         } else if (distance < 118) {
-          const shove = (118 - distance) * 0.19;
-          const left = Math.max(8, Math.min(window.innerWidth - rect.width - 8, rect.left + (dx / distance) * shove));
-          const top = Math.max(80, Math.min(window.innerHeight - rect.height - 18, rect.top + (dy / distance) * shove));
-          piece.style.left = `${left}px`;
-          piece.style.top = `${top}px`;
+          const magnitude = Math.max(distance, 0.01);
+          piece.vx = Math.max(-1.15, Math.min(1.15, piece.vx + (dx / magnitude) * 0.28));
+          piece.vy = Math.max(-1.15, Math.min(1.15, piece.vy + (dy / magnitude) * 0.28));
         }
       }
     }, { passive: true });
   }
+
+  window.addEventListener("resize", () => {
+    for (const piece of pieces) {
+      piece.x = Math.max(8, Math.min(window.innerWidth - 54, piece.x));
+      piece.y = Math.max(82, Math.min(window.innerHeight - 60, piece.y));
+    }
+  });
+  requestAnimationFrame(animate);
 }
 
 if (document.readyState === "loading") {
