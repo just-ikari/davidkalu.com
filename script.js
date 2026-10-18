@@ -342,19 +342,41 @@ function startDualShockFrenzy() {
   }
 
   const isMobile = window.matchMedia("(max-width: 760px)").matches;
-  const symbolSize = isMobile ? 44 : 46;
+  const symbolSize = 46;
   const symbolHalf = symbolSize / 2;
-  const columns = isMobile ? [0.12, 0.5, 0.88] : [0.08, 0.36, 0.64, 0.92];
-  const rows = isMobile ? [0.18, 0.36, 0.54, 0.72] : [0.16, 0.36, 0.56, 0.76];
-  const spawnSlots = rows.flatMap((y, row) => columns.map((x, column) => ({ x, y, row, column })));
-  for (let index = spawnSlots.length - 1; index > 0; index -= 1) {
-    const otherIndex = Math.floor(Math.random() * (index + 1));
-    [spawnSlots[index], spawnSlots[otherIndex]] = [spawnSlots[otherIndex], spawnSlots[index]];
+
+  function createSpawnPoints(desiredCount) {
+    const minX = 8;
+    const maxX = Math.max(minX, window.innerWidth - symbolSize - 8);
+    const minY = 82;
+    const maxY = Math.max(minY, window.innerHeight - symbolSize - 14);
+
+    for (let count = desiredCount; count >= 4; count -= 4) {
+      for (let gap = 12; gap >= 0; gap -= 2) {
+        for (let layoutAttempt = 0; layoutAttempt < 24; layoutAttempt += 1) {
+          const points = [];
+          const maxAttempts = count * 1000;
+          for (let attempt = 0; attempt < maxAttempts && points.length < count; attempt += 1) {
+            const candidate = {
+              x: minX + Math.random() * (maxX - minX),
+              y: minY + Math.random() * (maxY - minY)
+            };
+            const overlaps = points.some((point) =>
+              Math.abs(candidate.x - point.x) < symbolSize + gap &&
+              Math.abs(candidate.y - point.y) < symbolSize + gap
+            );
+            if (!overlaps) points.push(candidate);
+          }
+          if (points.length === count) return points;
+        }
+      }
+    }
+    return [];
   }
-  const horizontalPhase = Math.random() < 0.5 ? 1 : -1;
-  const verticalPhase = Math.random() < 0.5 ? 1 : -1;
-  for (let index = 0; index < spawnSlots.length; index += 1) {
-    const { row, column } = spawnSlots[index];
+
+  const spawnPoints = createSpawnPoints(isMobile ? 12 : 16);
+  for (let index = 0; index < spawnPoints.length; index += 1) {
+    const { x, y } = spawnPoints[index];
     const shape = cycle[index % cycle.length];
     const element = document.createElement("button");
     element.type = "button";
@@ -362,15 +384,13 @@ function startDualShockFrenzy() {
     element.dataset.shape = shape;
     element.textContent = glyphs[shape];
     element.setAttribute("aria-label", `Catch the floating ${names[shape]}`);
-    const x = Math.max(8, Math.min(window.innerWidth - symbolSize - 8, window.innerWidth * spawnSlots[index].x + (Math.random() - 0.5) * 14));
-    const y = Math.max(82, Math.min(window.innerHeight - symbolSize - 14, window.innerHeight * spawnSlots[index].y + (Math.random() - 0.5) * 8));
     const piece = {
       el: element,
       shape,
       x,
       y,
-      vx: (column % 2 === 0 ? horizontalPhase : -horizontalPhase) * (0.3 + Math.random() * 0.18),
-      vy: (row % 2 === 0 ? verticalPhase : -verticalPhase) * (0.36 + Math.random() * 0.18),
+      vx: (Math.random() < 0.5 ? -1 : 1) * (0.3 + Math.random() * 0.18),
+      vy: (Math.random() < 0.5 ? -1 : 1) * (0.36 + Math.random() * 0.18),
       active: true,
       cooldownUntil: 0
     };
