@@ -133,12 +133,7 @@ if (!prefersReducedMotion && "IntersectionObserver" in window) {
 
 function startDualShockFrenzy() {
   const cycle = ["triangle", "circle", "cross", "square"];
-  const glyphs = {
-    triangle: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3 21 21H3L12 3Z" /></svg>',
-    circle: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" /></svg>',
-    cross: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m3 3 18 18M21 3 3 21" /></svg>',
-    square: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" /></svg>'
-  };
+  const glyphs = { triangle: "△", circle: "○", cross: "×", square: "□" };
   const names = { triangle: "triangle", circle: "circle", cross: "cross", square: "square" };
   const combinationResults = {
     "circle|circle": "cross", "cross|cross": "square", "square|square": "triangle", "triangle|triangle": "circle",
@@ -238,7 +233,7 @@ function startDualShockFrenzy() {
   function updateShape(piece, shape) {
     piece.shape = shape;
     piece.el.dataset.shape = shape;
-    piece.el.innerHTML = glyphs[shape];
+    piece.el.textContent = glyphs[shape];
     piece.el.setAttribute("aria-label", `Catch the floating ${names[shape]}`);
     piece.el.classList.remove("fusion-flash");
     void piece.el.offsetWidth;
@@ -387,7 +382,7 @@ function startDualShockFrenzy() {
     element.type = "button";
     element.className = "frenzy-symbol";
     element.dataset.shape = shape;
-    element.innerHTML = glyphs[shape];
+    element.textContent = glyphs[shape];
     element.setAttribute("aria-label", `Catch the floating ${names[shape]}`);
     const piece = {
       el: element,
