@@ -418,3 +418,32 @@ if (document.readyState === "loading") {
 } else {
   startDualShockFrenzy();
 }
+function initContinuationForm() {
+  const form = document.querySelector("#continuation-form");
+  const status = document.querySelector("#continuation-status");
+  if (!form) return;
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    const fields = new FormData(form);
+    const name = String(fields.get("name") || "").trim();
+    const handle = String(fields.get("handle") || "").trim() || "Not provided";
+    const continuation = String(fields.get("continuation") || "").trim();
+    const body = [
+      `Name or pen name: ${name}`,
+      `Public handle or profile link: ${handle}`,
+      "",
+      "Continuation:",
+      continuation,
+      "",
+      "I agree that, if selected, my continuation and the credit details above may be published on davidkalu.com."
+    ].join("\n");
+    const subject = encodeURIComponent("Write-up continuation: How to Discover Your Talent");
+    const encodedBody = encodeURIComponent(body);
+    if (status) status.textContent = "Opening your email app. Please review the draft there and press Send to submit.";
+    window.location.href = `mailto:hello@davidkalu.com?subject=${subject}&body=${encodedBody}`;
+  });
+}
+
+initContinuationForm();
