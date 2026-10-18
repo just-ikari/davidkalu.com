@@ -1,3 +1,30 @@
+function initColorTheme() {
+  const root = document.documentElement;
+  const button = document.querySelector(".theme-toggle");
+  if (!button) return;
+  const label = button.querySelector(".theme-toggle-label");
+  const icon = button.querySelector(".theme-toggle-icon");
+  const themeColor = document.querySelector('meta[name="theme-color"]');
+
+  const applyTheme = (theme) => {
+    root.dataset.theme = theme;
+    const isDark = theme === "dark";
+    button.setAttribute("aria-pressed", String(isDark));
+    button.title = isDark ? "Switch to light mode" : "Switch to dark mode";
+    if (label) label.textContent = isDark ? "Light mode" : "Dark mode";
+    if (icon) icon.textContent = isDark ? "☼" : "☾";
+    if (themeColor) themeColor.content = isDark ? "#0c0a10" : "#f5f3ee";
+  };
+
+  applyTheme(root.dataset.theme === "dark" ? "dark" : "light");
+  button.addEventListener("click", () => {
+    const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
+    applyTheme(nextTheme);
+    try { localStorage.setItem("davidkalu:theme", nextTheme); } catch {}
+  });
+}
+
+initColorTheme();
 const currentYear = new Date().getFullYear();
 document.querySelector("#year")?.replaceChildren(String(currentYear));
 document.querySelector("#footer-year")?.replaceChildren(String(currentYear));

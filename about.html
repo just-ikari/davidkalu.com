@@ -4,14 +4,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f5f3ee" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="description" content="David Kalu on intelligence, opportunity, curiosity, and the words we use to describe people." />
     <title>About David Kalu — Notes on a life in progress</title>
     <link rel="icon" type="image/png" href="/favicon.png" sizes="96x96" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=20261018-frenzy8" />
-    <script src="script.js?v=20261018-frenzy8" defer></script>
+    <script>(()=>{let saved=null;try{saved=localStorage.getItem("davidkalu:theme")}catch{}const mode=saved==="dark"||saved==="light"?saved:(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=mode;const color=document.querySelector('meta[name="theme-color"]');if(color)color.content=mode==="dark"?"#0c0a10":"#f5f3ee"})()</script>
+    <link rel="stylesheet" href="style.css?v=20261018-dark-mode1" />
+    <script src="script.js?v=20261018-dark-mode1" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -21,6 +23,7 @@
         <a href="index.html#writing">Writing</a>
         <a href="about.html" aria-current="page">About</a>
         <a class="nav-contact" href="mailto:hello@davidkalu.com">Say hello <span aria-hidden="true">↗</span></a>
+      <button class="theme-toggle" type="button" aria-label="Dark mode" aria-pressed="false" title="Switch to dark mode"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">Dark mode</span></button>
       </nav>
     </header>
     <main id="main" class="about-page">
