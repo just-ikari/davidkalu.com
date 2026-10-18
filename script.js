@@ -447,3 +447,18 @@ function initContinuationForm() {
 }
 
 initContinuationForm();
+
+function initTrophyNote() {
+  const trigger = document.querySelector("#trophy-trigger");
+  const note = document.querySelector("#trophy-note");
+  if (!trigger || !note) return;
+  trigger.addEventListener("click", () => {
+    if (typeof note.showModal === "function") note.showModal();
+    else note.setAttribute("open", "");
+  });
+  note.addEventListener("click", (event) => {
+    if (event.target === note) note.close?.();
+  });
+}
+
+initTrophyNote();
