@@ -57,3 +57,5 @@
 
 /* Keep every Frenzy symbol the same size, including during hover and fusion */
 .frenzy-symbol{width:46px;height:46px;font-size:2rem}.frenzy-symbol:hover,.frenzy-symbol.is-caught{transform:none}@keyframes frenzy-fusion{0%{transform:rotate(-14deg)}65%{transform:rotate(8deg)}100%{transform:rotate(0)}}
+
+.frenzy-symbol svg{display:block;width:26px;height:26px;overflow:visible;pointer-events:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
