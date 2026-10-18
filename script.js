@@ -344,8 +344,8 @@ function startDualShockFrenzy() {
   const isMobile = window.matchMedia("(max-width: 760px)").matches;
   const symbolSize = isMobile ? 44 : 46;
   const symbolHalf = symbolSize / 2;
-  const columns = isMobile ? [0.08, 0.84] : [0.06, 0.32, 0.62, 0.86];
-  const rows = isMobile ? [0.18, 0.30, 0.42, 0.54] : [0.22, 0.48];
+  const columns = isMobile ? [0.12, 0.5, 0.88] : [0.08, 0.36, 0.64, 0.92];
+  const rows = isMobile ? [0.18, 0.36, 0.54, 0.72] : [0.16, 0.36, 0.56, 0.76];
   const spawnSlots = rows.flatMap((y, row) => columns.map((x, column) => ({ x, y, row, column })));
   for (let index = spawnSlots.length - 1; index > 0; index -= 1) {
     const otherIndex = Math.floor(Math.random() * (index + 1));
