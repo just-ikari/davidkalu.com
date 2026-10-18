@@ -26,3 +26,5 @@
 @media(max-width:760px){.frenzy-symbol{width:40px;height:40px;font-size:1.75rem}}
 
 @media(max-width:760px){.frenzy-symbol{width:44px;height:44px;font-size:1.9rem}.frenzy-welcome{width:min(390px,calc(100vw - 24px));left:12px!important;right:12px;bottom:74px;padding:14px 16px;grid-template-columns:28px minmax(0,1fr) 22px}.frenzy-welcome p{font-size:.78rem;line-height:1.55}.frenzy-secret{width:calc(100vw - 24px);max-height:82dvh;padding:34px 22px 24px}}
+
+.age-section{padding:36px 0 42px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);max-width:1080px}.age-section h2{font:500 2rem/1.2 var(--serif);letter-spacing:-.03em;margin:0 0 12px}.age-section>p:not(.eyebrow){max-width:850px;color:#65635c;font-size:.86rem;line-height:1.8;margin:0 0 11px}.age-section .age-line{color:var(--ink)!important;font:500 1rem/1.8 var(--sans)!important;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.age-section #age-counter{color:var(--accent)}@media(max-width:760px){.age-section{padding:30px 0 34px}.age-section h2{font-size:1.8rem}.age-section .age-line{font-size:.9rem!important}}

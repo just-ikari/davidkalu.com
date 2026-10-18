@@ -2,6 +2,33 @@ const currentYear = new Date().getFullYear();
 document.querySelector("#year")?.replaceChildren(String(currentYear));
 document.querySelector("#footer-year")?.replaceChildren(String(currentYear));
 
+const ageCounter = document.querySelector("#age-counter");
+if (ageCounter) {
+  const birthTimestamp = Date.parse("2010-01-12T11:43:00+01:00");
+  const agePartsAt = (nowTimestamp) => {
+    const now = new Date(nowTimestamp);
+    const birth = new Date(birthTimestamp);
+    let years = now.getUTCFullYear() - birth.getUTCFullYear();
+    let cursor = new Date(birthTimestamp);
+    cursor.setUTCFullYear(birth.getUTCFullYear() + years);
+    if (cursor > now) { years -= 1; cursor.setUTCFullYear(birth.getUTCFullYear() + years); }
+    let months = (now.getUTCFullYear() - cursor.getUTCFullYear()) * 12 + now.getUTCMonth() - cursor.getUTCMonth();
+    cursor.setUTCMonth(cursor.getUTCMonth() + months);
+    if (cursor > now) { months -= 1; cursor.setUTCMonth(cursor.getUTCMonth() - 1); }
+    let remainder = nowTimestamp - cursor.getTime();
+    const days = Math.floor(remainder / 86400000); remainder -= days * 86400000;
+    const hours = Math.floor(remainder / 3600000); remainder -= hours * 3600000;
+    const minutes = Math.floor(remainder / 60000); remainder -= minutes * 60000;
+    const seconds = Math.floor(remainder / 1000);
+    const milliseconds = Math.floor(remainder - seconds * 1000);
+    return [[years, "year"], [months, "month"], [days, "day"], [hours, "hour"], [minutes, "minute"], [seconds, "second"], [milliseconds, "millisecond"]]
+      .map(([value, unit]) => value + " " + unit + (value === 1 ? "" : "s")).join(", ");
+  };
+  const updateAge = () => { ageCounter.textContent = agePartsAt(Date.now()); };
+  updateAge();
+  window.setInterval(updateAge, 31);
+}
+
 const updateKey = "davidkalu:last-seen-write-up";
 const reloadKey = "davidkalu:write-up-reload-at";
 const pollEvery = 30000;
