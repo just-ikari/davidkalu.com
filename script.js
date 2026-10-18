@@ -292,9 +292,15 @@ function startDualShockFrenzy() {
 
   const columns = [0.06, 0.32, 0.62, 0.86];
   const rows = [0.22, 0.48];
-  for (let index = 0; index < 8; index += 1) {
-    const row = Math.floor(index / columns.length);
-    const column = index % columns.length;
+  const spawnSlots = rows.flatMap((y, row) => columns.map((x, column) => ({ x, y, row, column })));
+  for (let index = spawnSlots.length - 1; index > 0; index -= 1) {
+    const otherIndex = Math.floor(Math.random() * (index + 1));
+    [spawnSlots[index], spawnSlots[otherIndex]] = [spawnSlots[otherIndex], spawnSlots[index]];
+  }
+  const horizontalPhase = Math.random() < 0.5 ? 1 : -1;
+  const verticalPhase = Math.random() < 0.5 ? 1 : -1;
+  for (let index = 0; index < spawnSlots.length; index += 1) {
+    const { row, column } = spawnSlots[index];
     const shape = cycle[index % cycle.length];
     const element = document.createElement("button");
     element.type = "button";
@@ -302,15 +308,15 @@ function startDualShockFrenzy() {
     element.dataset.shape = shape;
     element.textContent = glyphs[shape];
     element.setAttribute("aria-label", `Catch the floating ${names[shape]}`);
-    const x = Math.max(8, Math.min(window.innerWidth - 54, window.innerWidth * columns[column]));
-    const y = Math.max(82, Math.min(window.innerHeight - 60, window.innerHeight * rows[row]));
+    const x = Math.max(8, Math.min(window.innerWidth - 54, window.innerWidth * spawnSlots[index].x + (Math.random() - 0.5) * 14));
+    const y = Math.max(82, Math.min(window.innerHeight - 60, window.innerHeight * spawnSlots[index].y + (Math.random() - 0.5) * 8));
     const piece = {
       el: element,
       shape,
       x,
       y,
-      vx: column % 2 === 0 ? 0.38 : -0.38,
-      vy: row % 2 === 0 ? 0.42 : -0.42,
+      vx: (column % 2 === 0 ? horizontalPhase : -horizontalPhase) * (0.3 + Math.random() * 0.18),
+      vy: (row % 2 === 0 ? verticalPhase : -verticalPhase) * (0.36 + Math.random() * 0.18),
       active: true,
       cooldownUntil: 0
     };
