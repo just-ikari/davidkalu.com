@@ -415,10 +415,10 @@ function startDualShockFrenzy() {
         const distance = Math.hypot(dx, dy);
         if (distance < 19) {
           catchPiece(piece, centerX, centerY);
-        } else if (distance < 118) {
+        } else if (distance < 160) {
           const magnitude = Math.max(distance, 0.01);
-          piece.vx = Math.max(-1.15, Math.min(1.15, piece.vx + (dx / magnitude) * 0.28));
-          piece.vy = Math.max(-1.15, Math.min(1.15, piece.vy + (dy / magnitude) * 0.28));
+          piece.vx = Math.max(-2.4, Math.min(2.4, piece.vx + (dx / magnitude) * 0.72));
+          piece.vy = Math.max(-2.4, Math.min(2.4, piece.vy + (dy / magnitude) * 0.72));
         }
       }
     }, { passive: true });
