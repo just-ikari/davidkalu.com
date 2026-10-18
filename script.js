@@ -125,15 +125,38 @@ function startDualShockFrenzy() {
   welcome.className = "frenzy-welcome";
   welcome.setAttribute("role", "status");
   welcome.setAttribute("aria-live", "polite");
-  welcome.innerHTML = '<span class="frenzy-popup-mark" aria-hidden="true">✳</span><div><span class="frenzy-label">A LITTLE SIDE QUEST</span><p>Welcome to my mini game — <strong>DualShock Frenzy</strong> — catch the 4 symbols in the clockwise order of a controller to get a hidden write-up.</p></div><button class="frenzy-dismiss" type="button" aria-label="Dismiss game message">×</button>';
+  welcome.innerHTML = '<span class="frenzy-popup-mark" aria-hidden="true">✳</span><div><span class="frenzy-label">A LITTLE SIDE QUEST</span><p>One thing gaming teaches you: notice the pattern, adapt when it changes, and keep going. In <strong>DualShock Frenzy</strong>, catch the four symbols in the controller’s clockwise order to uncover a hidden write-up.</p></div><button class="frenzy-dismiss" type="button" aria-label="Dismiss game message">×</button>';
   document.body.append(welcome);
   welcome.querySelector(".frenzy-dismiss").addEventListener("click", () => welcome.classList.remove("is-visible"));
 
   const success = document.createElement("dialog");
   success.className = "frenzy-secret";
   success.setAttribute("aria-labelledby", "frenzy-secret-title");
-  success.innerHTML = '<form method="dialog"><button class="frenzy-close" aria-label="Close hidden write-up">×</button></form><p class="eyebrow">A NOTE YOU FOUND</p><h2 id="frenzy-secret-title">A resource in motion</h2><p>We talk about being smart as if it were a fixed thing: something a person either has or doesn’t. But ability changes with the room we are in, the tools we can reach, and the time someone gives us to try.</p><p>A book can open a door. A patient teacher can turn a mistake into a method. A chance to practise can make an unfamiliar thing feel possible. The person did not suddenly become worthy of learning; they finally got the conditions to show what they could do.</p><p>Maybe that is why I think of smarts as a resource. Resources grow when they are shared, supported, and put to use.</p><p class="frenzy-signoff">THANKS FOR PLAYING <span aria-hidden="true">✳</span></p>';
+  success.innerHTML = '<form method="dialog"><button class="frenzy-close" aria-label="Close hidden write-up">×</button></form><p class="eyebrow">A NOTE YOU FOUND</p><h2 id="frenzy-secret-title"></h2><div class="frenzy-secret-copy"></div><p class="frenzy-signoff">THANKS FOR PLAYING <span aria-hidden="true">✳</span></p>';
   document.body.append(success);
+
+  const bonusWriteups = [
+    { title: "A resource in motion", paragraphs: ["We talk about being smart as if it were a fixed thing: something a person either has or doesn’t. But ability changes with the room we are in, the tools we can reach, and the time someone gives us to try.", "A book can open a door. A patient teacher can turn a mistake into a method. A chance to practise can make an unfamiliar thing feel possible. The person did not suddenly become worthy of learning; they finally got the conditions to show what they could do.", "Maybe that is why I think of smarts as a resource. Resources grow when they are shared, supported, and put to use."] },
+    { title: "The useful mistake", paragraphs: ["A mistake is an answer to a question you did not know you were asking. It tells you where your current idea stops working.", "That can feel like failure for a moment. Then you adjust, try again, and leave with a better map than the one you started with.", "I want to get better at treating mistakes as information, without pretending they never sting."] },
+    { title: "Start before you feel ready", paragraphs: ["There is a version of me that waits until every detail is right before beginning. That version is very organised and has made absolutely nothing.", "Starting gives an idea something real to push against. It lets other people respond, lets the rough edges show, and gives the next attempt a direction.", "So this is a small reminder to begin imperfectly. The next step gets easier to see once you are moving."] },
+    { title: "Borrowed light", paragraphs: ["Most of what I know began with something someone else shared: a lesson, a generous explanation, a book, or a question that would not leave me alone.", "Learning can feel personal, but it is rarely solitary. We carry pieces of other people’s patience and curiosity into the things we make.", "If I can pass even one useful piece along, that feels like a good use of what I have learned."] }
+  ];
+
+  function showBonusWriteup() {
+    let previous = -1;
+    try { const stored = window.localStorage.getItem("dk-frenzy-last-writeup"); previous = stored === null ? -1 : Number(stored); } catch { /* Storage may be unavailable. */ }
+    const choices = bonusWriteups.map((_, index) => index).filter((index) => index !== previous);
+    const selectedIndex = choices[Math.floor(Math.random() * choices.length)];
+    const selected = bonusWriteups[selectedIndex];
+    success.querySelector("#frenzy-secret-title").textContent = selected.title;
+    const copy = success.querySelector(".frenzy-secret-copy");
+    copy.replaceChildren(...selected.paragraphs.map((paragraph) => {
+      const element = document.createElement("p");
+      element.textContent = paragraph;
+      return element;
+    }));
+    try { window.localStorage.setItem("dk-frenzy-last-writeup", String(selectedIndex)); } catch { /* Storage may be unavailable. */ }
+  }
 
   function unlockSound() {
     if (audioContext) {
@@ -211,6 +234,7 @@ function startDualShockFrenzy() {
     }
     if (caught.length === 4) {
       won = true;
+      showBonusWriteup();
       window.setTimeout(() => {
         if (typeof success.showModal === "function") success.showModal();
         else success.setAttribute("open", "");
@@ -219,7 +243,7 @@ function startDualShockFrenzy() {
     }
     window.setTimeout(() => {
       if (won) return;
-      piece.x = Math.max(8, Math.min(window.innerWidth - 54, Math.random() * (window.innerWidth - 70)));
+      piece.x = Math.max(8, Math.min(window.innerWidth - symbolSize - 8, Math.random() * (window.innerWidth - 70)));
       piece.y = Math.max(88, Math.min(window.innerHeight - 64, Math.random() * (window.innerHeight - 110)));
       piece.vx = (Math.random() - 0.5) * 0.7;
       piece.vy = (Math.random() - 0.5) * 0.55;
@@ -254,7 +278,7 @@ function startDualShockFrenzy() {
     second.el.style.left = `${second.x}px`;
     second.el.style.top = `${second.y}px`;
     playCollisionSound(result);
-    showRipple((first.x + second.x) / 2 + 23, (first.y + second.y) / 2 + 23);
+    showRipple((first.x + second.x) / 2 + symbolHalf, (first.y + second.y) / 2 + symbolHalf);
   }
 
   function animate(now) {
@@ -281,17 +305,20 @@ function startDualShockFrenzy() {
       for (let second = first + 1; second < pieces.length; second += 1) {
         const b = pieces[second];
         if (!a.active || a.cooldownUntil > now || !b.active || b.cooldownUntil > now) continue;
-        const dx = (b.x + 23) - (a.x + 23);
-        const dy = (b.y + 23) - (a.y + 23);
+        const dx = (b.x + symbolHalf) - (a.x + symbolHalf);
+        const dy = (b.y + symbolHalf) - (a.y + symbolHalf);
         const distance = Math.hypot(dx, dy);
-        if (distance < 48) fuse(a, b, now, distance, dx, dy);
+        if (distance < symbolSize + 2) fuse(a, b, now, distance, dx, dy);
       }
     }
     requestAnimationFrame(animate);
   }
 
-  const columns = [0.06, 0.32, 0.62, 0.86];
-  const rows = [0.22, 0.48];
+  const isMobile = window.matchMedia("(max-width: 760px)").matches;
+  const symbolSize = isMobile ? 44 : 46;
+  const symbolHalf = symbolSize / 2;
+  const columns = isMobile ? [0.08, 0.84] : [0.06, 0.32, 0.62, 0.86];
+  const rows = isMobile ? [0.18, 0.30, 0.42, 0.54] : [0.22, 0.48];
   const spawnSlots = rows.flatMap((y, row) => columns.map((x, column) => ({ x, y, row, column })));
   for (let index = spawnSlots.length - 1; index > 0; index -= 1) {
     const otherIndex = Math.floor(Math.random() * (index + 1));
@@ -308,8 +335,8 @@ function startDualShockFrenzy() {
     element.dataset.shape = shape;
     element.textContent = glyphs[shape];
     element.setAttribute("aria-label", `Catch the floating ${names[shape]}`);
-    const x = Math.max(8, Math.min(window.innerWidth - 54, window.innerWidth * spawnSlots[index].x + (Math.random() - 0.5) * 14));
-    const y = Math.max(82, Math.min(window.innerHeight - 60, window.innerHeight * spawnSlots[index].y + (Math.random() - 0.5) * 8));
+    const x = Math.max(8, Math.min(window.innerWidth - symbolSize - 8, window.innerWidth * spawnSlots[index].x + (Math.random() - 0.5) * 14));
+    const y = Math.max(82, Math.min(window.innerHeight - symbolSize - 14, window.innerHeight * spawnSlots[index].y + (Math.random() - 0.5) * 8));
     const piece = {
       el: element,
       shape,
@@ -334,8 +361,8 @@ function startDualShockFrenzy() {
     document.addEventListener("pointermove", (event) => {
       for (const piece of pieces) {
         if (!piece.active || won) continue;
-        const centerX = piece.x + 23;
-        const centerY = piece.y + 23;
+        const centerX = piece.x + symbolHalf;
+        const centerY = piece.y + symbolHalf;
         const dx = centerX - event.clientX;
         const dy = centerY - event.clientY;
         const distance = Math.hypot(dx, dy);
@@ -352,7 +379,7 @@ function startDualShockFrenzy() {
 
   window.addEventListener("resize", () => {
     for (const piece of pieces) {
-      piece.x = Math.max(8, Math.min(window.innerWidth - 54, piece.x));
+      piece.x = Math.max(8, Math.min(window.innerWidth - symbolSize - 8, piece.x));
       piece.y = Math.max(82, Math.min(window.innerHeight - 60, piece.y));
     }
   });

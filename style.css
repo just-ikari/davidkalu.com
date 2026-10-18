@@ -24,3 +24,5 @@
 /* DualShock Frenzy: orange-only glyphs, clear spacing and fresh pair fusions */
 .frenzy-symbol{z-index:24;width:46px;height:46px;border:0;padding:0;background:transparent;color:var(--accent);display:grid;place-items:center;font:400 2rem/1 var(--sans);cursor:pointer;touch-action:manipulation;animation:none;transition:opacity .2s,transform .18s;will-change:left,top,transform}.frenzy-symbol:hover{transform:scale(1.12)}.frenzy-symbol.is-caught{opacity:0;pointer-events:none;transform:scale(1.6)}.frenzy-symbol.fusion-flash{animation:frenzy-fusion .36s cubic-bezier(.2,.8,.2,1)}@keyframes frenzy-fusion{0%{transform:scale(.72) rotate(-14deg)}65%{transform:scale(1.28) rotate(8deg)}100%{transform:scale(1) rotate(0)}}
 @media(max-width:760px){.frenzy-symbol{width:40px;height:40px;font-size:1.75rem}}
+
+@media(max-width:760px){.frenzy-symbol{width:44px;height:44px;font-size:1.9rem}.frenzy-welcome{width:min(390px,calc(100vw - 24px));left:12px!important;right:12px;bottom:74px;padding:14px 16px;grid-template-columns:28px minmax(0,1fr) 22px}.frenzy-welcome p{font-size:.78rem;line-height:1.55}.frenzy-secret{width:calc(100vw - 24px);max-height:82dvh;padding:34px 22px 24px}}
