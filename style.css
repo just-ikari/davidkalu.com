@@ -100,3 +100,29 @@
 @media(max-width:760px){.vision-page{padding-top:61px;padding-bottom:72px}.vision-intro{padding-bottom:42px}.vision-goal{grid-template-columns:1fr;gap:17px;padding-top:24px}.vision-goal-meta{flex-direction:row;gap:16px;align-items:center}.vision-goal-image{height:clamp(235px,63vw,350px);margin-bottom:22px}.vision-goal-image figcaption{left:18px;right:18px;bottom:17px}}
 @media(max-width:460px){.vision-image-label{left:16px;bottom:17px;right:54px}.vision-image-arrow{right:14px;bottom:17px;width:31px;height:31px}.vision-goal-dates{gap:7px;font-size:.56rem}}
 @media(prefers-reduced-motion:reduce){.vision-hero-art,.vision-hero-art img,.vision-image-arrow{transition:none}}
+
+/* Social Dilemma reader interactions */
+.social-poll,.film-reveal{margin:34px 0 40px;padding:25px 26px;background:var(--surface);border:1px solid var(--line)}
+.social-poll .eyebrow,.film-reveal .eyebrow{margin-bottom:12px;color:var(--accent)}
+.social-poll h2,.film-reveal h2{font:500 1.55rem/1.25 var(--serif);letter-spacing:-.025em;margin:0 0 18px;color:var(--ink)}
+.social-poll-options{display:flex;flex-wrap:wrap;gap:9px}
+.social-poll-options button,.film-reveal-start{min-height:42px;padding:10px 13px;border:1px solid var(--line);border-radius:2px;background:var(--paper);color:var(--ink);font:500 .75rem var(--sans);cursor:pointer;transition:color .2s,border-color .2s,background .2s}
+.social-poll-options button:hover,.social-poll-options button:focus-visible,.film-reveal-start:hover,.film-reveal-start:focus-visible{border-color:var(--accent);color:var(--accent)}
+.social-poll-options button:disabled{background:var(--ink);border-color:var(--ink);color:var(--paper);cursor:default}
+.social-poll-status,.film-reveal-status{font:.65rem/1.6 var(--mono);color:var(--muted);margin:13px 0 0}
+.social-dilemma-beat{font:600 1.4rem var(--serif);color:var(--accent)}
+.film-reveal-answer{margin-top:21px;padding-top:20px;border-top:1px solid var(--line)}
+.film-reveal-answer h3{font:500 1.7rem/1.2 var(--serif);margin:0 0 10px;color:var(--ink)}
+.film-reveal-answer p{margin-bottom:12px}
+.reward-star{display:grid;place-items:center;width:42px;height:42px;border:1px solid #d6a32f;border-radius:50%;background:#f1c75b;color:#493613;font-size:1.45rem;line-height:1;cursor:pointer;box-shadow:0 5px 14px rgba(157,111,15,.19);transition:transform .2s,box-shadow .2s}
+.reward-star:hover{transform:translateY(-2px) rotate(-8deg);box-shadow:0 8px 20px rgba(157,111,15,.26)}
+.reward-star:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.reward-note{position:fixed;width:min(420px,calc(100vw - 32px));max-width:none;padding:32px 30px 28px;background:var(--paper);color:var(--ink);border:1px solid var(--line);box-shadow:0 20px 70px rgba(25,24,21,.24)}
+.reward-note::backdrop{background:rgba(34,34,31,.48);backdrop-filter:blur(3px)}
+.reward-note form{position:absolute;top:12px;right:14px}
+.reward-note-close{border:0;background:transparent;color:var(--muted);font:1.5rem/1 var(--sans);cursor:pointer}
+.reward-note .eyebrow{margin-bottom:14px}
+.reward-note h2{font:500 1.7rem/1.2 var(--serif);margin:0 0 13px}
+.reward-note>p:not(.eyebrow){font-size:.83rem;line-height:1.75;color:var(--muted);margin:0}
+@media(max-width:760px){.social-poll,.film-reveal{padding:21px 18px;margin:28px 0 34px}.social-poll h2,.film-reveal h2{font-size:1.38rem}.reward-note{padding:30px 22px 24px}.reward-note h2{font-size:1.55rem}}
+@media(prefers-reduced-motion:reduce){.social-poll-options button,.film-reveal-start,.reward-star{transition:none}}

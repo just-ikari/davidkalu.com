@@ -551,3 +551,76 @@ function initTrophyNote() {
 }
 
 initTrophyNote();
+
+function initSocialDilemmaInteractions() {
+  const pollOptions = document.querySelector(".social-poll-options");
+  const pollStatus = document.querySelector("#triangle-poll-status");
+  const pollKey = "davidkalu:bermuda-triangle-poll";
+  const showVote = (vote, saved) => {
+    pollOptions?.querySelectorAll("button[data-vote]").forEach((button) => {
+      const selected = button.dataset.vote === vote;
+      button.disabled = saved;
+      if (selected) button.setAttribute("aria-pressed", "true");
+      else button.removeAttribute("aria-pressed");
+    });
+    if (pollStatus) {
+      const choice = { yes: "Yes", no: "Not really", unsure: "I’m not sure" }[vote] || "your answer";
+      pollStatus.textContent = saved
+        ? `Your vote (${choice}) is saved in this browser. This page doesn’t have a shared poll tally yet.`
+        : "Your vote is recorded for this visit only; this browser couldn’t save it for next time.";
+    }
+  };
+
+  if (pollOptions) {
+    let savedVote = null;
+    try { savedVote = localStorage.getItem(pollKey); } catch {}
+    if (savedVote && ["yes", "no", "unsure"].includes(savedVote)) showVote(savedVote, true);
+    pollOptions.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-vote]");
+      if (!button || button.disabled) return;
+      let saved = false;
+      try {
+        localStorage.setItem(pollKey, button.dataset.vote);
+        saved = true;
+      } catch {}
+      showVote(button.dataset.vote, saved);
+    });
+  }
+
+  const start = document.querySelector("#film-reveal-start");
+  const status = document.querySelector("#film-reveal-status");
+  const answer = document.querySelector("#film-reveal-answer");
+  if (start && status && answer) {
+    start.addEventListener("click", () => {
+      let remaining = 10;
+      start.disabled = true;
+      start.textContent = "Revealing…";
+      status.textContent = `Your guess is locked in. Revealing in ${remaining} seconds.`;
+      const timer = window.setInterval(() => {
+        remaining -= 1;
+        if (remaining > 0) {
+          status.textContent = `Revealing in ${remaining} seconds.`;
+          return;
+        }
+        window.clearInterval(timer);
+        start.hidden = true;
+        answer.hidden = false;
+        status.textContent = "The title is revealed.";
+      }, 1000);
+    }, { once: true });
+  }
+
+  const rewardTrigger = document.querySelector("#reward-star");
+  const rewardNote = document.querySelector("#reward-note");
+  if (rewardTrigger && rewardNote) {
+    rewardTrigger.addEventListener("click", () => {
+      if (typeof rewardNote.showModal === "function") rewardNote.showModal();
+      else rewardNote.setAttribute("open", "");
+    });
+    rewardNote.addEventListener("click", (event) => {
+      if (event.target === rewardNote) rewardNote.close?.();
+    });
+  }
+}
+
+initSocialDilemmaInteractions();
