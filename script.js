@@ -147,6 +147,12 @@ function startDualShockFrenzy() {
   let audioContext = null;
   let lastFrame = performance.now();
   const isLaptop = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const siteHeader = document.querySelector(".site-header");
+
+  function getTopBoundary() {
+    const headerBottom = siteHeader?.getBoundingClientRect().bottom ?? 0;
+    return headerBottom > 0 ? Math.max(82, headerBottom) : 8;
+  }
 
   const welcome = document.createElement("aside");
   welcome.className = "frenzy-welcome";
@@ -244,7 +250,7 @@ function startDualShockFrenzy() {
   function findOpenSpawnPoint(excludedPiece) {
     const minX = 8;
     const maxX = Math.max(minX, window.innerWidth - symbolSize - 8);
-    const minY = 82;
+    const minY = getTopBoundary();
     const maxY = Math.max(minY, window.innerHeight - symbolSize - 14);
     for (let attempt = 0; attempt < 500; attempt += 1) {
       const point = {
@@ -312,7 +318,7 @@ function startDualShockFrenzy() {
 
     const minX = 8;
     const maxX = Math.max(minX, window.innerWidth - symbolSize - 8);
-    const minY = 82;
+    const minY = getTopBoundary();
     const maxY = Math.max(minY, window.innerHeight - symbolSize - 14);
     const separateOnAxis = (axis, min, max) => {
       const delta = second[axis] - first[axis];
@@ -365,15 +371,16 @@ function startDualShockFrenzy() {
     const edge = 8;
     const width = window.innerWidth;
     const height = window.innerHeight;
-    const maxTop = Math.max(88, height - 60);
+    const minTop = getTopBoundary();
+    const maxTop = Math.max(minTop, height - symbolSize - 14);
     for (const piece of pieces) {
       if (!piece.active) continue;
       piece.x += piece.vx * delta;
       piece.y += piece.vy * delta;
       if (piece.x < edge || piece.x > width - 54) piece.vx *= -1;
-      if (piece.y < 82 || piece.y > maxTop) piece.vy *= -1;
+      if (piece.y < minTop || piece.y > maxTop) piece.vy *= -1;
       piece.x = Math.max(edge, Math.min(width - 54, piece.x));
-      piece.y = Math.max(82, Math.min(maxTop, piece.y));
+      piece.y = Math.max(minTop, Math.min(maxTop, piece.y));
     }
     for (let pass = 0; pass < pieces.length; pass += 1) {
       let foundOverlap = false;
@@ -409,7 +416,7 @@ function startDualShockFrenzy() {
   function createSpawnPoints(desiredCount) {
     const minX = 8;
     const maxX = Math.max(minX, window.innerWidth - symbolSize - 8);
-    const minY = 82;
+    const minY = getTopBoundary();
     const maxY = Math.max(minY, window.innerHeight - symbolSize - 14);
 
     for (let count = desiredCount; count >= 4; count -= 4) {
@@ -488,7 +495,8 @@ function startDualShockFrenzy() {
   window.addEventListener("resize", () => {
     for (const piece of pieces) {
       piece.x = Math.max(8, Math.min(window.innerWidth - symbolSize - 8, piece.x));
-      piece.y = Math.max(82, Math.min(window.innerHeight - 60, piece.y));
+      const minY = getTopBoundary();
+      piece.y = Math.max(minY, Math.min(window.innerHeight - symbolSize - 14, piece.y));
     }
   });
   requestAnimationFrame(animate);
