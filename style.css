@@ -63,3 +63,8 @@
 
 /* Restore the original symbol scale while keeping it steady during play. */
 .frenzy-symbol{width:46px;height:46px;font-size:2rem}.frenzy-symbol:hover,.frenzy-symbol.is-caught{transform:none}@keyframes frenzy-fusion{0%{transform:rotate(-14deg)}65%{transform:rotate(8deg)}100%{transform:rotate(0)}}
+
+/* Keep the site navigation available while reading. */
+html{scroll-padding-top:96px}
+.site-header{position:sticky;top:0;z-index:50;background:var(--paper)}
+@media(max-width:460px){html{scroll-padding-top:124px}}
