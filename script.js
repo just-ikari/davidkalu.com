@@ -241,6 +241,23 @@ function startDualShockFrenzy() {
     piece.el.addEventListener("animationend", () => piece.el.classList.remove("fusion-flash"), { once: true });
   }
 
+  function findOpenSpawnPoint(excludedPiece) {
+    const minX = 8;
+    const maxX = Math.max(minX, window.innerWidth - symbolSize - 8);
+    const minY = 82;
+    const maxY = Math.max(minY, window.innerHeight - symbolSize - 14);
+    for (let attempt = 0; attempt < 500; attempt += 1) {
+      const point = {
+        x: minX + Math.random() * (maxX - minX),
+        y: minY + Math.random() * (maxY - minY)
+      };
+      const overlaps = pieces.some((other) => other !== excludedPiece && other.active &&
+        Math.abs(point.x - other.x) < symbolSize && Math.abs(point.y - other.y) < symbolSize);
+      if (!overlaps) return point;
+    }
+    return null;
+  }
+
   function catchPiece(piece, x, y) {
     if (!piece.active || won) return;
     piece.active = false;
@@ -268,10 +285,15 @@ function startDualShockFrenzy() {
       }, 500);
       return;
     }
-    window.setTimeout(() => {
+    const respawn = () => {
       if (won) return;
-      piece.x = Math.max(8, Math.min(window.innerWidth - symbolSize - 8, Math.random() * (window.innerWidth - 70)));
-      piece.y = Math.max(88, Math.min(window.innerHeight - 64, Math.random() * (window.innerHeight - 110)));
+      const point = findOpenSpawnPoint(piece);
+      if (!point) {
+        window.setTimeout(respawn, 250);
+        return;
+      }
+      piece.x = point.x;
+      piece.y = point.y;
       piece.vx = (Math.random() - 0.5) * 0.7;
       piece.vy = (Math.random() - 0.5) * 0.55;
       piece.active = true;
@@ -279,27 +301,56 @@ function startDualShockFrenzy() {
       piece.el.style.left = `${piece.x}px`;
       piece.el.style.top = `${piece.y}px`;
       piece.el.classList.remove("is-caught");
-    }, 900);
+    };
+    window.setTimeout(respawn, 900);
   }
 
-  function fuse(first, second, now, distance, dx, dy) {
+  function separatePieces(first, second, dx, dy) {
+    const overlapX = symbolSize - Math.abs(dx);
+    const overlapY = symbolSize - Math.abs(dy);
+    if (overlapX <= 0 || overlapY <= 0) return;
+
+    const minX = 8;
+    const maxX = Math.max(minX, window.innerWidth - symbolSize - 8);
+    const minY = 82;
+    const maxY = Math.max(minY, window.innerHeight - symbolSize - 14);
+    const separateOnAxis = (axis, min, max) => {
+      const delta = second[axis] - first[axis];
+      const direction = delta === 0 ? 0 : Math.sign(delta);
+      const needed = symbolSize - Math.abs(delta) + 1;
+      const firstRoom = direction >= 0 ? first[axis] - min : max - first[axis];
+      const secondRoom = direction >= 0 ? max - second[axis] : second[axis] - min;
+      if (firstRoom + secondRoom < needed) return false;
+      let firstMove = Math.min(needed / 2, firstRoom);
+      let secondMove = needed - firstMove;
+      if (secondMove > secondRoom) {
+        secondMove = secondRoom;
+        firstMove = needed - secondMove;
+      }
+      const sign = direction || (firstRoom + secondRoom >= needed ? 1 : -1);
+      first[axis] -= sign * firstMove;
+      second[axis] += sign * secondMove;
+      const velocity = axis === "x" ? "vx" : "vy";
+      first[velocity] = -sign * Math.max(Math.abs(first[velocity]), 0.3);
+      second[velocity] = sign * Math.max(Math.abs(second[velocity]), 0.3);
+      return true;
+    };
+
+    const axes = overlapX <= overlapY
+      ? [["x", minX, maxX], ["y", minY, maxY]]
+      : [["y", minY, maxY], ["x", minX, maxX]];
+    for (const [axis, min, max] of axes) {
+      if (separateOnAxis(axis, min, max)) return;
+    }
+  }
+
+  function fuse(first, second, now, dx, dy) {
     const pair = [first.shape, second.shape].sort().join("|");
     const result = combinationResults[pair] || "circle";
     updateShape(first, result);
     updateShape(second, result);
     first.cooldownUntil = second.cooldownUntil = now + 900;
-    const safeDistance = Math.max(distance, 0.01);
-    const nx = dx / safeDistance;
-    const ny = dy / safeDistance;
-    const separation = Math.max(2, (52 - distance) / 2);
-    first.x -= nx * separation;
-    first.y -= ny * separation;
-    second.x += nx * separation;
-    second.y += ny * separation;
-    first.vx = -first.vx;
-    first.vy = -first.vy;
-    second.vx = -second.vx;
-    second.vy = -second.vy;
+    separatePieces(first, second, dx, dy);
     first.el.style.left = `${first.x}px`;
     first.el.style.top = `${first.y}px`;
     second.el.style.left = `${second.x}px`;
@@ -323,20 +374,30 @@ function startDualShockFrenzy() {
       if (piece.y < 82 || piece.y > maxTop) piece.vy *= -1;
       piece.x = Math.max(edge, Math.min(width - 54, piece.x));
       piece.y = Math.max(82, Math.min(maxTop, piece.y));
+    }
+    for (let pass = 0; pass < pieces.length; pass += 1) {
+      let foundOverlap = false;
+      for (let first = 0; first < pieces.length; first += 1) {
+        const a = pieces[first];
+        if (!a.active) continue;
+        for (let second = first + 1; second < pieces.length; second += 1) {
+          const b = pieces[second];
+          if (!a.active || !b.active) continue;
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const overlaps = Math.abs(dx) < symbolSize && Math.abs(dy) < symbolSize;
+          if (!overlaps) continue;
+          foundOverlap = true;
+          if (a.cooldownUntil <= now && b.cooldownUntil <= now) fuse(a, b, now, dx, dy);
+          else separatePieces(a, b, dx, dy);
+        }
+      }
+      if (!foundOverlap) break;
+    }
+    for (const piece of pieces) {
+      if (!piece.active) continue;
       piece.el.style.left = `${piece.x}px`;
       piece.el.style.top = `${piece.y}px`;
-    }
-    for (let first = 0; first < pieces.length; first += 1) {
-      const a = pieces[first];
-      if (!a.active || a.cooldownUntil > now) continue;
-      for (let second = first + 1; second < pieces.length; second += 1) {
-        const b = pieces[second];
-        if (!a.active || a.cooldownUntil > now || !b.active || b.cooldownUntil > now) continue;
-        const dx = (b.x + symbolHalf) - (a.x + symbolHalf);
-        const dy = (b.y + symbolHalf) - (a.y + symbolHalf);
-        const distance = Math.hypot(dx, dy);
-        if (distance < symbolSize + 2) fuse(a, b, now, distance, dx, dy);
-      }
     }
     requestAnimationFrame(animate);
   }
@@ -415,10 +476,10 @@ function startDualShockFrenzy() {
         const distance = Math.hypot(dx, dy);
         if (distance < 19) {
           catchPiece(piece, centerX, centerY);
-        } else if (distance < 160) {
+        } else if (distance < 118) {
           const magnitude = Math.max(distance, 0.01);
-          piece.vx = Math.max(-2.4, Math.min(2.4, piece.vx + (dx / magnitude) * 0.72));
-          piece.vy = Math.max(-2.4, Math.min(2.4, piece.vy + (dy / magnitude) * 0.72));
+          piece.vx = Math.max(-1.15, Math.min(1.15, piece.vx + (dx / magnitude) * 0.28));
+          piece.vy = Math.max(-1.15, Math.min(1.15, piece.vy + (dy / magnitude) * 0.28));
         }
       }
     }, { passive: true });
